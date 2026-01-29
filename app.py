@@ -4,11 +4,11 @@ from dashapp import init_dash
 app = Flask(__name__)
 
 # Initialize Dash
-init_dash(app)
+dash_app = init_dash(app)
 
 @app.route('/')
 def index():
-    return '<a href="/dash">Go to Dash</a>'
+    return '<a href="/dash">Go to Dash</a>' 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
