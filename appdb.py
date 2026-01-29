@@ -21,9 +21,7 @@ def get_connection():
 #####Connectivity to Snowflake. Works only in Development Environment. Deployment doesn't work ######
 
 def get_last_day_of_previous_month(ASOF:date):
-    today = ASOF 
-    last_day_prev_month = today + relativedelta(months=-2, day=31)
-    #last_day_of_previous_month = first_day_of_last_month - timedelta(days=1)
+    last_day_prev_month = ASOF + relativedelta(months=-2, day=31)
     return last_day_prev_month
 
 def getFundOverview():
@@ -81,5 +79,6 @@ def getFx(date_value):
     finally:
         cs.close()
         ctx.close()
+
 
 
