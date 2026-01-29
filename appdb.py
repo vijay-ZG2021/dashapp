@@ -4,14 +4,15 @@ from  dash import Dash,html,dcc
 from dotenv import load_dotenv
 import os 
 from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
 
 #####Connectivity to Snowflake. Works only in Development Environment. Deployment doesn't work ######
 
 def get_last_day_of_previous_month(ASOF:date):
-    today = ASOF
-    first_day_of_current_month = date(today.year,today.month, 1)
-    last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
-    return last_day_of_previous_month
+    today = ASOF 
+    last_day_prev_month = today + relativedelta(months=-2, day=31)
+    #last_day_of_previous_month = first_day_of_last_month - timedelta(days=1)
+    return last_day_prev_month
 
 load_dotenv()
 
@@ -27,7 +28,7 @@ ctx= snowflake.connector.connect(
     schema = os.environ.get('schema')
 )
 
-def getFundOverview_void():
+def getFundOverview():
     try:
         cs = ctx.cursor()
         cs.execute("select FUND_NAME,GAV_IN_FUND_CCY,TOTAL_LEVERAGE,REPO_LOAN_AMOUNT_FUND_CCY,MARGIN_POSTED_FUND_CCY,NET_CASH_AT_CUSTODY_FUND_CCY,CASH_RESERVES_FUND_CCY,CASH_NET_OF_RESERVES_FUND_CCY,CASH_NET_OF_RESERVES_AS_PCT_OF_GAV from ZAIS_PROD_MRT.FINCITE.FUND_OVERVIEW_REPORT" )
@@ -56,7 +57,7 @@ def getDerivativesMetrics(date_value):
 def getPositions(date_value):
     try:
         cs = ctx.cursor()
-        cs.execute("select * from ZAIS_PROD_MRT.FINCITE.VW_CRYSTAL_POSITIONS where as_of_date=%s", (date_value,))
+        cs.execute("select * ,AGGREGATE_NAME AS Fund_Name from ZAIS_PROD_MRT.FINCITE.VW_CRYSTAL_POSITIONS where as_of_date=%s", (date_value,))
         data = cs.fetchall()
         hdrs =pd.DataFrame(cs.description)
         df = pd.DataFrame(data)
@@ -78,7 +79,3 @@ def getFx(date_value):
     finally:
         cs.close()
     ctx.close()
-
-if __name__ == "__main__":
-    getdata_void()
-    #app.run_server(debug=True)
