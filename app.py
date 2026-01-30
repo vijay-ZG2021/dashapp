@@ -1,14 +1,10 @@
 from flask import Flask, render_template
 from dashapp import init_dash
 
-app = Flask(__name__)
+def create_app():
+    flask_app = Flask(__name__)
+    init_dash(flask_app)
+    return flask_app
 
-# Initialize Dash
-dash_app = init_dash(app)
+server = create_app()   # 🔥 THIS IS WHAT AZURE NEEDS
 
-@app.route('/')
-def index():
-    return '<a href="/dash">Go to Dash</a>' 
-
-if __name__ == '__main__':
-    app.run(debug=True)
