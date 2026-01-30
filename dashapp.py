@@ -1,107 +1,158 @@
 import pandas as pd
-from appdb import getFundOverview,getDerivativesMetrics,getPositions,get_last_day_of_previous_month
-from dagrid import create_grid 
-from dash import Dash,html,Input,Output,callback
-import dash_ag_grid as dag
-from dash import dcc
-from datetime import date,datetime
-import dash
+from datetime import date, datetime
 
+from dash import Dash, html, dcc, Input, Output
+import dash_ag_grid as dag
+
+from appdb import (
+    getFundOverview,
+    getDerivativesMetrics,
+    getPositions,
+    get_last_day_of_previous_month,
+)
+from dagrid import create_grid
+
+
+# ------------------------------------------------------------------------------
+# Dash App Factory
+# ------------------------------------------------------------------------------
 def init_dash(server):
-    try:
-        date_value=get_last_day_of_previous_month(date.today())
-        dfFO = getFundOverview()
-        dfDM = getDerivativesMetrics(date_value)
-        dfPositions = getPositions(date_value)
-    except ValueError:
-       print(ValueError)
-       
-    dash_app = dash.Dash(
+    dash_app = Dash(
         __name__,
         server=server,
+        url_base_pathname="/dash/",
         suppress_callback_exceptions=True,
-        url_base_pathname='/dash/'  # Mount Dash here
     )
-    dash_app.layout = html.Div([
-        html.H1("Zais Group Snowflake Data", style={'text-align': 'center'}),
-        html.Div([
-        html.Br(),
-        html.Br(),
-        dcc.Dropdown(
-                    id='filter-dropdown',
-                    options=[{'label': 'All', 'value': 'All'}] + [{'label': i, 'value': i} for i in dfFO['FUND_NAME'].unique()],
-                    value='All' ,
-                    style={'height': '30px', 'width': '300px','marginTop':15,'marginBottom': 35}
+
+    # --------------------------------------------------------------------------
+    # Layout (NO database calls here)
+    # --------------------------------------------------------------------------
+    dash_app.layout = html.Div(
+        [
+            # ---- Shared state ----
+            dcc.Store(id="fund-overview-store"),
+
+            html.H1("Zais Group Snowflake Data", style={"textAlign": "center"}),
+
+            # ---- Controls ----
+            html.Div(
+                [
+                    dcc.Dropdown(
+                        id="filter-dropdown",
+                        value="All",
+                        style={"width": "300px"},
                     ),
-        dcc.DatePickerSingle(
-            id='my-date-picker-single',
-            min_date_allowed=date(2020, 1, 1),
-            max_date_allowed=date(2045, 12, 31),
-            initial_visible_month=date(2023, 4, 1),
-            date=get_last_day_of_previous_month(date.today()),
-            style={'height': '15px', 'width': '20px','marginTop': 25,'marginBottom': 25,'marginLeft': 10})],
-            style={'display': 'flex', 'position':'relative', 'top':'8px','left':'56px'}
+                    dcc.DatePickerSingle(
+                        id="asof-date",
+                        min_date_allowed=date(2020, 1, 1),
+                        max_date_allowed=date(2045, 12, 31),
+                        date=get_last_day_of_previous_month(date.today()),
+                        style={"marginLeft": "15px"},
+                    ),
+                ],
+                style={"display": "flex", "marginBottom": "30px"},
             ),
-        html.P(''),
-        html.H2("Fund Overview", style={'text-align': 'left'}),
-        html.Div(id='fund-overview-grid'),
-        html.P(''),
-        html.H2("Fund Positions", style={'text-align': 'left'}),
-        html.Div(id='fund-positions-grid'),
-        html.P(''),
-        html.H2("Fund Derivatives", style={'text-align': 'left'}),
-        html.Div(id='fund-derivatives-grid'),
-         ])
-    
-    #callback for Fund Overview grid
-    @dash_app.callback(
-        Output('fund-overview-grid','children'),
-        Input('filter-dropdown','value')
-    )
-    def update_fund_overview(selected_fund):
-        dfFO= getFundOverview()
-        if selected_fund and selected_fund!='All':
-            dfFO = dfFO[dfFO['FUND_NAME']== selected_fund]
-        
-        return create_grid("FundOverview",dfFO)
-    
-    #callback for Fund Positions Grid
-    @dash_app.callback(
-        Output('fund-positions-grid','children'),
-        Input('my-date-picker-single','date'),
-        Input('filter-dropdown','value')
-    )
-    def update_fund_positions(selected_date,selected_fund):
-        if selected_date is None:
-            selected_date= get_last_day_of_previous_month(date.today())
-        if isinstance(selected_date,str):
-            selected_date=datetime.strptime(selected_date, '%Y-%m-%d').date()
-        dfPositions = getPositions(selected_date)
 
-        return create_grid("FundPositions",dfPositions)
+            # ---- Grids ----
+            html.H2("Fund Overview"),
+            html.Div(id="fund-overview-grid"),
 
-     # Callback for Fund Derivatives grid
-    @dash_app.callback(
-        Output('fund-derivatives-grid', 'children'),
-        Input('my-date-picker-single', 'date'),
-        Input('filter-dropdown', 'value')
+            html.H2("Fund Positions"),
+            html.Div(id="fund-positions-grid"),
+
+            html.H2("Fund Derivatives"),
+            html.Div(id="fund-derivatives-grid"),
+        ]
     )
-    def update_fund_derivatives(selected_date, selected_fund):
+
+    # --------------------------------------------------------------------------
+    # Callbacks
+    # --------------------------------------------------------------------------
+
+    # 1️⃣ Load Fund Overview ONCE (lazy, after app loads)
+    @dash_app.callback(
+        Output("fund-overview-store", "data"),
+        Input("filter-dropdown", "value"),
+    )
+    def load_fund_overview(_):
+        df = getFundOverview()
+        return df.to_dict("records")
+
+    # 2️⃣ Populate dropdown dynamically
+    @dash_app.callback(
+        Output("filter-dropdown", "options"),
+        Input("fund-overview-store", "data"),
+    )
+    def update_dropdown(data):
+        if not data:
+            return [{"label": "All", "value": "All"}]
+
+        df = pd.DataFrame(data)
+        funds = sorted(df["FUND_NAME"].unique())
+
+        return (
+            [{"label": "All", "value": "All"}]
+            + [{"label": f, "value": f} for f in funds]
+        )
+
+    # 3️⃣ Fund Overview grid
+    @dash_app.callback(
+        Output("fund-overview-grid", "children"),
+        Input("fund-overview-store", "data"),
+        Input("filter-dropdown", "value"),
+    )
+    def update_fund_overview(data, selected_fund):
+        if not data:
+            return html.Div("No data available")
+
+        df = pd.DataFrame(data)
+
+        if selected_fund and selected_fund != "All":
+            df = df[df["FUND_NAME"] == selected_fund]
+
+        return create_grid("FundOverview", df)
+
+    # 4️⃣ Fund Positions grid
+    @dash_app.callback(
+        Output("fund-positions-grid", "children"),
+        Input("asof-date", "date"),
+        Input("filter-dropdown", "value"),
+    )
+    def update_positions(selected_date, selected_fund):
         if selected_date is None:
             selected_date = get_last_day_of_previous_month(date.today())
-        
-        # Convert string date to date object if needed
+
         if isinstance(selected_date, str):
-            selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
-        
-        dfDM = getDerivativesMetrics(selected_date)
-        
-        if selected_fund and selected_fund != 'All':
-            # Adjust column name based on your actual dataframe structure
-            if 'FUND_NAME' in dfDM.columns:
-                dfDM = dfDM[dfDM['FUND_NAME'] == selected_fund]
-        
-        return create_grid("FundDerivatives", dfDM)
+            selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+
+        df = getPositions(selected_date)
+
+        if selected_fund and selected_fund != "All":
+            if "FUND_NAME" in df.columns:
+                df = df[df["FUND_NAME"] == selected_fund]
+
+        return create_grid("FundPositions", df)
+
+    # 5️⃣ Fund Derivatives grid
+    @dash_app.callback(
+        Output("fund-derivatives-grid", "children"),
+        Input("asof-date", "date"),
+        Input("filter-dropdown", "value"),
+    )
+    def update_derivatives(selected_date, selected_fund):
+        if selected_date is None:
+            selected_date = get_last_day_of_previous_month(date.today())
+
+        if isinstance(selected_date, str):
+            selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+
+        df = getDerivativesMetrics(selected_date)
+
+        if selected_fund and selected_fund != "All":
+            if "FUND_NAME" in df.columns:
+                df = df[df["FUND_NAME"] == selected_fund]
+
+        return create_grid("FundDerivatives", df)
 
     return dash_app
 
