@@ -12,7 +12,6 @@ from appdb import (
 )
 from dagrid import create_grid
 
-
 # ------------------------------------------------------------------------------
 # Dash App Factory
 # ------------------------------------------------------------------------------
@@ -23,7 +22,6 @@ def init_dash(server):
         url_base_pathname="/dash/",
         suppress_callback_exceptions=True,
     )
-
     # --------------------------------------------------------------------------
     # Layout (NO database calls here)
     # --------------------------------------------------------------------------
@@ -155,5 +153,4 @@ def init_dash(server):
         return create_grid("FundDerivatives", df)
 
     return dash_app
-
 
