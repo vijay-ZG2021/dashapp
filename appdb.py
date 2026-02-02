@@ -7,8 +7,19 @@ from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 
 #####Connectivity to Snowflake. Works only in Development Environment. Deployment doesn't work ######
+def _check_env():
+    missing = [k for k in [
+        "SNOWFLAKE_ACCOUNT",
+        "SNOWFLAKE_USER",
+        "SNOWFLAKE_PASSWORD"
+    ] if not os.getenv(k)]
+    if missing:
+        raise RuntimeError(f"Missing env vars: {missing}")
+
+
 # appdb.py
 def get_connection():
+    _check_env()
     return snowflake.connector.connect(
         user=os.environ["SNOWFLAKE_USER"],
         password=os.environ["SNOWFLAKE_PASSWORD"],
@@ -57,4 +68,5 @@ def getFx(date_value):
             return pd.DataFrame(
                     cs.fetchall()                    
             )
+
 
