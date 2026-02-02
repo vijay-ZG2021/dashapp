@@ -16,6 +16,7 @@ def get_connection():
         warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
         database=os.environ["SNOWFLAKE_DATABASE"],
         schema=os.environ["SNOWFLAKE_SCHEMA"],
+        role = os.environ["SNOWFLAKE_ROLE"],
         ocsp_fail_open=True  # important for Azure
     )
 
@@ -56,3 +57,4 @@ def getFx(date_value):
             return pd.DataFrame(
                     cs.fetchall()                    
             )
+
