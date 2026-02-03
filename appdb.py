@@ -20,7 +20,7 @@ def get_engine() -> Engine:
         _ENGINE = create_engine(
             "snowflake://{user}:{password}@{account}/{database}/{schema}?role={role}&warehouse={warehouse}".format(
                 user=os.environ["SNOWFLAKE_USER"],
-                password=os.environ["SNOWFLAKE_PASSWORD"],
+                password=parse.quote(os.environ["SNOWFLAKE_PASSWORD"]),
                 account=os.environ["SNOWFLAKE_ACCOUNT"],
                 database=os.environ["SNOWFLAKE_DATABASE"],
                 schema=os.environ["SNOWFLAKE_SCHEMA"],
