@@ -19,20 +19,13 @@ def get_engine() -> Engine:
         registry.register('snowflake', 'snowflake.sqlalchemy', 'dialect')
         _ENGINE = create_engine(
             "snowflake://{user}:{password}@{account}/{database}/{schema}?role={role}&warehouse={warehouse}".format(
-                # user=os.environ["SNOWFLAKE_USER"],
-                # password=os.environ["SNOWFLAKE_PASSWORD"],
-                # account=os.environ["SNOWFLAKE_ACCOUNT"],
-                # database=os.environ["SNOWFLAKE_DATABASE"],
-                # schema=os.environ["SNOWFLAKE_SCHEMA"],
-                # role=os.environ["SNOWFLAKE_ROLE"],
-                # warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
-                user="vijay",
-                password=parse.quote('P@ssw0rd1'),
-                account="pe50280.east-us-2.azure",
-                warehouse = "COMPUTE_WH",
-                database="ZAIS_PROD_LND",
-                schema="Fincite",
-                role= "DATA_ENGINEER",
+                user=os.environ["SNOWFLAKE_USER"],
+                password=os.environ["SNOWFLAKE_PASSWORD"],
+                account=os.environ["SNOWFLAKE_ACCOUNT"],
+                database=os.environ["SNOWFLAKE_DATABASE"],
+                schema=os.environ["SNOWFLAKE_SCHEMA"],
+                role=os.environ["SNOWFLAKE_ROLE"],
+                warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
                 ocsp_fail_open=True  # important for Azure
             ),
             pool_size=5,          # max open connections
@@ -43,25 +36,6 @@ def get_engine() -> Engine:
         )
 
     return _ENGINE
-
-# def get_connection():
-#     return snowflake.connector.connect(
-#         # user=os.environ["SNOWFLAKE_USER"],
-#         # password=os.environ["SNOWFLAKE_PASSWORD"],
-#         # account=os.environ["SNOWFLAKE_ACCOUNT"],
-#         # warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
-#         # database=os.environ["SNOWFLAKE_DATABASE"],
-#         # schema=os.environ["SNOWFLAKE_SCHEMA"],
-#         user="vijay",
-#         password="P@ssw0rd1",
-#         account="pe50280.east-us-2.azure",
-#         Warehouse = "COMPUTE_WH",
-#         database="ZAIS_PROD_LND",
-#         schema="Fincite",
-#         ocsp_fail_open=True  # important for Azure
-#     )
-
-
 
 def get_last_day_of_previous_month(ASOF:date):
     return  ASOF + relativedelta(months=-3, day=31)
