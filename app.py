@@ -7,4 +7,3 @@ def create_app():
     return flask_app
 
 server = create_app()   # 🔥 THIS IS WHAT AZURE NEEDS
-

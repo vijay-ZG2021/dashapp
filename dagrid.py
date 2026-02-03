@@ -1,5 +1,4 @@
 import dash_ag_grid as dag
-import dash_pivottable
 from datetime import datetime
 from GridColumnFactory import GridSchema,GridColumnFactory
 import pandas as pd
@@ -44,34 +43,34 @@ def format_percent(value, decimals=2):
 def create_schema(gridId:str):
     schema = GridSchema()
     if gridId == "FundOverview":
-        schema.add_column(GridColumnFactory.create("FUND_NAME","Fund Name", filter=True,editable=True))
-       # schema.add_column(GridColumnFactory.create("AsOfDate","Date (yyyy-mm-dd)", filter=True,editable=True))
-        #schema.add_column(GridColumnFactory.create("Type","Type", filter=True,editable=True ))
-        schema.add_column(GridColumnFactory.create("GAV_IN_FUND_CCY","GAV(mm)", filter=True,editable=True,valueFormatter= millions_format))
-        schema.add_column(GridColumnFactory.create("TOTAL_LEVERAGE","LEVERAGE", filter=True,editable=True,valueFormatter= double_format))
-        schema.add_column(GridColumnFactory.create("MARGIN_POSTED_FUND_CCY","MARGIN POSTED", filter=True,editable=True,valueFormatter= double_format))
-        schema.add_column(GridColumnFactory.create("CASH_NET_OF_RESERVES_AS_PCT_OF_GAV","Cash % of GAV(%)", filter=True,editable=True,valueFormatter= format_percent))
+        #taFrame
+##Columns: [id, asof, deriv_id, security_name, beta, yield, spread, effective_duration, spread_duration, soft_reserves, delta, dv01, aggregate_id, version]
+        schema.add_column(GridColumnFactory.create("fund_name","Fund Name", filter=True,editable=True))
+        schema.add_column(GridColumnFactory.create("gav_in_fund_ccy","GAV(mm)", filter=True,editable=True,valueFormatter= millions_format))
+        schema.add_column(GridColumnFactory.create("total_leverage","LEVERAGE", filter=True,editable=True,valueFormatter= double_format))
+        schema.add_column(GridColumnFactory.create("margin_posted_fund_ccy","MARGIN POSTED", filter=True,editable=True,valueFormatter= double_format))
+        schema.add_column(GridColumnFactory.create("cash_net_of_reserves_as_pct_of_gav","Cash % of GAV(%)", filter=True,editable=True,valueFormatter= format_percent))
     
     if gridId=="FundDerivatives" :
-        schema.add_column(GridColumnFactory.create("SECURITY_NAME","Description", filter=True,editable=True))
-        schema.add_column(GridColumnFactory.create("ASOF","As Of Date", filter=True,editable=True ))
-        schema.add_column(GridColumnFactory.create("BETA","BETA", filter=True,editable=True,valueFormatter= double_format))
-        schema.add_column(GridColumnFactory.create("YIELD","YIELD", filter=True,editable=True,valueFormatter= double_format))
-        schema.add_column(GridColumnFactory.create("SPREAD","SPREAD", filter=True,editable=True,valueFormatter= double_format))
-        schema.add_column(GridColumnFactory.create("DERIV_ID","DERIV_ID", filter=True,editable=True))
-        schema.add_column(GridColumnFactory.create("SPREAD_DURATION","SPREAD_DURATION", filter=True,editable=True))
-        schema.add_column(GridColumnFactory.create("DV01","DV01", filter=True,editable=True,valueFormatter= double_format)) 
+        #schema.add_column(GridColumnFactory.create("SECURITY_NAME","Description", filter=True,editable=True))
+        schema.add_column(GridColumnFactory.create("asof","As Of Date", filter=True,editable=True ))
+        schema.add_column(GridColumnFactory.create("beta","BETA", filter=True,editable=True,valueFormatter= double_format))
+        schema.add_column(GridColumnFactory.create("yield","YIELD", filter=True,editable=True,valueFormatter= double_format))
+        schema.add_column(GridColumnFactory.create("spread","SPREAD", filter=True,editable=True,valueFormatter= double_format))
+        schema.add_column(GridColumnFactory.create("deriv_id","DERIV_ID", filter=True,editable=True))
+        schema.add_column(GridColumnFactory.create("spread_duration","SPREAD_DURATION", filter=True,editable=True))
+        schema.add_column(GridColumnFactory.create("dv01","DV01", filter=True,editable=True,valueFormatter= double_format)) 
     if gridId=="FundPositions" :
-        schema.add_column(GridColumnFactory.create("FUND_NAME","Fund Name", filter=True,editable=True))
-        schema.add_column(GridColumnFactory.create("DESCRIPTION","Description", filter=True,editable=True))
-        schema.add_column(GridColumnFactory.create("AS_OF_DATE","Date (yyyy-mm-dd)", filter=True))
-        schema.add_column(GridColumnFactory.create("ORIGINAL_NOTIONAL","Original Notional", filter=True,editable=True,valueFormatter= millions_format))
-        schema.add_column(GridColumnFactory.create("FUND_CURRENCY","Currency", filter=True,editable=True ))
-        schema.add_column(GridColumnFactory.create("CURRENT_NOTIONAL","Current Notional", filter=True,editable=True,valueFormatter= millions_format))
-        schema.add_column(GridColumnFactory.create("VAL","Market Value", filter=True,editable=True,valueFormatter= millions_format))
-        schema.add_column(GridColumnFactory.create("PRICE","Price", filter=True,editable=True,valueFormatter= double_format))
-        schema.add_column(GridColumnFactory.create("PRODUCT","Product", filter=True,editable=True ))
-        schema.add_column(GridColumnFactory.create("CLASS","SubClass", filter=True,editable=True ))  
+        schema.add_column(GridColumnFactory.create("fund_name","Fund Name", filter=True,editable=True))
+        schema.add_column(GridColumnFactory.create("description","Description", filter=True,editable=True))
+        schema.add_column(GridColumnFactory.create("as_of_date","Date (yyyy-mm-dd)", filter=True))
+        schema.add_column(GridColumnFactory.create("original_notional","Original Notional", filter=True,editable=True,valueFormatter= millions_format))
+        schema.add_column(GridColumnFactory.create("fund_currency","Currency", filter=True,editable=True ))
+        schema.add_column(GridColumnFactory.create("current_notional","Current Notional", filter=True,editable=True,valueFormatter= millions_format))
+        schema.add_column(GridColumnFactory.create("val","Market Value", filter=True,editable=True,valueFormatter= millions_format))
+        schema.add_column(GridColumnFactory.create("price","Price", filter=True,editable=True,valueFormatter= double_format))
+        schema.add_column(GridColumnFactory.create("product","Product", filter=True,editable=True ))
+        schema.add_column(GridColumnFactory.create("class","SubClass", filter=True,editable=True ))  
     return schema
 
 
@@ -83,7 +82,8 @@ def get_col_defs(gridId:str,dfData):
 def get_formatted_data(gridId : str, dfData) :  
     schema = create_schema(gridId)
     arrayObj =schema.get_columns_arrayObj()
-    formatted_df= pd.DataFrame(columns=dfData.columns)
+    # Now you can create a new DataFrame using its columns:
+    formatted_df = pd.DataFrame(columns=dfData.columns)
     for index, row in dfData.iterrows():
         formatted_row = {
             col.field: col.format_value(row[col.field]) for name,col in arrayObj
@@ -118,18 +118,4 @@ def create_grid(gridId:str,dfData):
             "suppressAggFuncInHeader": True,
         }
     )
-
     return grid
-
-
-def create_pivot_grid(gridid,dfData,colName,rowName,valName):
-    pivotgrid = dash_pivottable.PivotTable(
-            id="%s" % datetime.now(),
-            data= dfData.to_dict("records"),
-            cols=colName,
-            rows=rowName,
-            vals=valName,
-            aggregatorName="Sum",
-          )
-
-    return pivotgrid

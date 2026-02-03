@@ -10,7 +10,7 @@ from appdb import (
     getPositions,
     get_last_day_of_previous_month,
 )
-from dagrid import create_grid
+from dagrid  import create_grid
 
 # ------------------------------------------------------------------------------
 # Dash App Factory
@@ -19,7 +19,7 @@ def init_dash(server):
     dash_app = Dash(
         __name__,
         server=server,
-        url_base_pathname="/dash/",
+        url_base_pathname="/",
         suppress_callback_exceptions=True,
     )
     # --------------------------------------------------------------------------
@@ -29,7 +29,6 @@ def init_dash(server):
         [
             # ---- Shared state ----
             dcc.Store(id="fund-overview-store"),
-
             html.H1("Zais Group Snowflake Data", style={"textAlign": "center"}),
 
             # ---- Controls ----
@@ -86,7 +85,7 @@ def init_dash(server):
             return [{"label": "All", "value": "All"}]
 
         df = pd.DataFrame(data)
-        funds = sorted(df["FUND_NAME"].unique())
+        funds = sorted(df["fund_name"].unique())
 
         return (
             [{"label": "All", "value": "All"}]
@@ -106,7 +105,7 @@ def init_dash(server):
         df = pd.DataFrame(data)
 
         if selected_fund and selected_fund != "All":
-            df = df[df["FUND_NAME"] == selected_fund]
+            df = df[df["fund_name"] == selected_fund]
 
         return create_grid("FundOverview", df)
 
@@ -124,10 +123,9 @@ def init_dash(server):
             selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
 
         df = getPositions(selected_date)
-
         if selected_fund and selected_fund != "All":
-            if "FUND_NAME" in df.columns:
-                df = df[df["FUND_NAME"] == selected_fund]
+            if "fund_name" in df.columns:
+                df = df[df["fund_name"] == selected_fund]
 
         return create_grid("FundPositions", df)
 
@@ -145,11 +143,6 @@ def init_dash(server):
             selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
 
         df = getDerivativesMetrics(selected_date)
-
-        if selected_fund and selected_fund != "All":
-            if "FUND_NAME" in df.columns:
-                df = df[df["FUND_NAME"] == selected_fund]
-
         return create_grid("FundDerivatives", df)
 
     return dash_app
