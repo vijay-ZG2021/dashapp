@@ -1,7 +1,7 @@
 import pandas as pd
 import os 
 from datetime import   date 
-from urllib import parse
+from urllib.parse import quote_plus
 from sqlalchemy import create_engine,text,bindparam
 from sqlalchemy.engine import Engine
 from dateutil.relativedelta import relativedelta
@@ -19,8 +19,8 @@ def get_engine() -> Engine:
         registry.register('snowflake', 'snowflake.sqlalchemy', 'dialect')
         _ENGINE = create_engine(
             "snowflake://{user}:{password}@{account}/{database}/{schema}?role={role}&warehouse={warehouse}".format(
-                user=os.environ["SNOWFLAKE_USER"],
-                password=parse.quote(os.environ["SNOWFLAKE_PASSWORD"]),
+                user=quote_plus(os.environ["SNOWFLAKE_USER"]),
+                password=quote_plus(os.environ["SNOWFLAKE_PASSWORD"]),
                 account=os.environ["SNOWFLAKE_ACCOUNT"],
                 database=os.environ["SNOWFLAKE_DATABASE"],
                 schema=os.environ["SNOWFLAKE_SCHEMA"],
